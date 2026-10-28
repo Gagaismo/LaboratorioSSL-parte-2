@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Informe Laboratorio 2do Parcial</title>
+<style>
+  @page { size: A4; margin: 20mm 18mm 18mm 18mm; }
+  body { font: 11pt/1.45 "Times New Roman", Georgia, serif; color: #111; background: #fff; max-width: 820px; margin: 0 auto; padding: 16px; }
+  @media print { body { padding: 0; max-width: none; } }
+  h1 { font-size: 20pt; margin: 0 0 6px; }
+  h2 { font-size: 15pt; border-bottom: 1.5px solid #222; padding-bottom: 3px; margin: 26px 0 10px; break-after: avoid; }
+  h3 { font-size: 12.5pt; margin: 18px 0 6px; break-after: avoid; }
+  p { margin: 6px 0; text-align: justify; }
+  code, .mono { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; }
+  pre { font: 9pt/1.35 Consolas, "Courier New", monospace; background: #f5f5f5; border: 1px solid #ccc; padding: 8px 10px; white-space: pre-wrap; break-inside: avoid; }
+  pre.codigo { break-inside: auto; font-size: 8pt; }
+  pre.largo { break-inside: auto; }
+  table.traza td { font-size: 8pt; }
+  table { border-collapse: collapse; margin: 8px 0; font-size: 9.5pt; break-inside: auto; }
+  tr { break-inside: avoid; }
+  th, td { border: 1px solid #555; padding: 2px 6px; text-align: center; }
+  th { background: #e8e8e8; }
+  td.izq { text-align: left; }
+  .portada { height: 245mm; display: flex; flex-direction: column; break-after: page; }
+  .encabezado { display: grid; grid-template-columns: 1fr 3fr 1.3fr; border: 1.5px solid #222; }
+  .encabezado > div { padding: 10px; border-right: 1.5px solid #222; display: flex; align-items: center; justify-content: center; text-align: center; }
+  .encabezado > div:last-child { border-right: none; }
+  .titulo { margin-top: 60mm; text-align: center; }
+  .titulo p { text-align: center; font-size: 14pt; margin: 4px 0; }
+  .logo { height: 22mm; }
+  .integrantes { margin: auto auto 8mm; font-size: 12pt; min-width: 110mm; }
+  .integrantes th, .integrantes td { font-size: 12pt; padding: 4px 12px; }
+  .datos { font-size: 12pt; }
+  .datos td { border: none; text-align: left; padding: 4px 8px; font-size: 12pt; }
+  .figura { text-align: center; margin: 10px 0; break-inside: avoid; }
+  .figura img { width: 100%; border: 1px solid #999; }
+  .epigrafe { font-size: 9.5pt; font-style: italic; text-align: center; }
+  .salto { break-before: page; }
+  .nota { font-size: 10pt; border-left: 3px solid #888; padding-left: 8px; }
+  ul, ol { margin: 4px 0 6px; }
+  .indice li { margin: 2px 0; }
+</style>
+</head>
+<body>
+<div class="portada">
+  <div class="encabezado">
+    <div><img src="logo-utn.png" alt="Logo UTN" class="logo"></div>
+    <div><div><b><i>UNIVERSIDAD TECNOLÓGICA NACIONAL</i></b><br><i>Facultad Regional Tucumán</i><br>Departamento: SISTEMAS<br>Cátedra: Sintaxis y Semántica de los Lenguajes</div></div>
+    <div><b>ACTIVIDAD<br>DE LABORATORIO<br>2do. PARCIAL</b></div>
+  </div>
+  <div class="titulo">
+    <h1>Analizador Sintáctico (Parser)</h1>
+    <p><i>Herramientas de metacompilación JLex y Cup</i></p>
+    <p>Subconjunto LMD (Lenguaje de Manipulación de Datos) de SQL</p>
+  </div>
+  <table class="integrantes">
+    <tr><th>Integrantes</th><th>Legajo</th><th>Comisión</th></tr>
+    <tr><td class="izq">Brandan, Lucas</td><td>60911</td><td>2K6</td></tr>
+    <tr><td class="izq">Brandan, Mariano</td><td>60910</td><td>2K6</td></tr>
+    <tr><td class="izq">Guebel, Lautaro</td><td>60462</td><td>2K7</td></tr>
+    <tr><td class="izq">Martí, Mateo</td><td>60244</td><td>2K6</td></tr>
+    <tr><td class="izq">Pérez Arias, Tomás</td><td>60798</td><td>2K7</td></tr>
+  </table>
+  <table class="datos">
+    <tr><td>Docente:</td><td>Ing. Ricardo Silva Teseira</td></tr>
+    <tr><td>Año:</td><td>2026</td></tr>
+    <tr><td>Interfaz web:</td><td class="mono">https://gagaismo.github.io/LaboratorioSSL-parte-2/</td></tr>
+    <tr><td>Código fuente:</td><td class="mono">https://github.com/Gagaismo/LaboratorioSSL-parte-2</td></tr>
+  </table>
+</div>
+
+<h2>Índice</h2>
+<ol class="indice">
+  <li>Enunciado</li>
+  <li>Marco teórico</li>
+  <li>Especificación léxica: archivo JLex (<code>Sql.lex</code>)</li>
+  <li>Especificación sintáctica: archivo Cup (<code>Sql.cup</code>)</li>
+  <li>Integración del scanner y el parser: programa principal</li>
+  <li>Compilación y ejecución</li>
+  <li>Pruebas</li>
+  <li>Interfaces web y de consola</li>
+  <li>Conclusiones</li>
+  <li>Anexo A: Código fuente</li>
+</ol>
+
+<h2>1. Enunciado</h2>
+<p>Dadas las reglas léxicas y sintácticas del subconjunto de instrucciones LMD (Lenguaje de Manipulación de Datos) del
+  lenguaje SQL que utilizan los SGBD (Sistemas Gestores de Bases de Datos), construir un <b>Parser</b> (analizador
+  sintáctico) codificado en Java, utilizando las herramientas de metacompilación <b>JLex</b> y <b>Cup</b>. JLex parte de
+  las expresiones regulares de los componentes léxicos del lenguaje y obtiene un <b>Scanner</b> (analizador léxico) en
+  Java, capaz de obtener los tokens y suministrárselos al parser. Cup parte de una GIC descripta en notación
+  <b>BNF</b>, que especifica las reglas sintácticas del lenguaje, y obtiene un parser en Java capaz de detectar los
+  errores sintácticos a partir de un archivo de texto que contiene líneas de instrucciones LMD de SQL.</p>
+<p>Las reglas del lenguaje son las del material de la cátedra <i>Sintaxis estándar ANSI básica del LMD SQL</i>:</p>
+<pre>INSERT INTO tabla (columna1, columna2...) VALUES (valor1, valor2...) ;
+INSERT INTO tabla VALUES (valor1, valor2...) ;
+UPDATE tabla SET columna1 = valor1, columna2 = valor2... WHERE columnaN = valorN ;
+DELETE FROM tabla WHERE columna1 = valor1 ;
+SELECT * FROM tabla ;
+SELECT columna1, columna2... FROM tabla ;</pre>
+<ul>
+  <li><i>tabla</i>, <i>columna1</i>, <i>columna2</i> son identificadores; si contienen espacios se escriben entre comillas dobles.</li>
+  <li><i>valor1</i>, <i>valor2</i> son expresiones del mismo tipo que las columnas. Las cadenas van entre comillas simples.</li>
+  <li>Las expresiones usan los operadores <code>+ - * / &lt; &gt; &lt;= &gt;= = AND OR NOT</code> y solo números enteros.</li>
+  <li>En el INSERT con lista de columnas, las cantidades de columnas y de valores deben ser iguales.</li>
+</ul>
+
+<h2>2. Marco teórico</h2>
+<h3>2.1. Análisis léxico y sintáctico</h3>
+<p>El <b>analizador léxico</b> (scanner) lee el texto fuente carácter por carácter y lo agrupa en <b>lexemas</b>; a cada
+  lexema le asigna una categoría o <b>token</b> (palabra reservada, identificador, constante, operador). Los
+  componentes léxicos son lenguajes regulares (tipo 3 de Chomsky), por lo que se describen con <b>expresiones
+  regulares</b> y se reconocen con un <b>autómata finito</b>. El <b>analizador sintáctico</b> (parser) recibe la secuencia
+  de tokens y verifica que respete la estructura del lenguaje, descripta con una <b>gramática independiente del
+  contexto</b> (GIC, tipo 2), cuyo reconocedor es un <b>autómata de pila</b>.</p>
+<h3>2.2. JLex</h3>
+<p>JLex es un generador de analizadores léxicos para Java (el equivalente a Lex de C). Su archivo de especificación
+  tiene tres secciones separadas por <code>%%</code>: <b>código de usuario</b> (copiado al principio del archivo
+  generado: <code>package</code> e <code>import</code>), <b>directivas</b> (opciones como <code>%class</code>,
+  <code>%cup</code>, <code>%char</code>, <code>%ignorecase</code>, código propio entre <code>%{ %}</code> y
+  definiciones de macros con expresiones regulares) y <b>reglas léxicas</b>: pares <i>expresión regular</i>
+  { <i>acción en Java</i> }. JLex construye un AFN por cada regla, lo convierte en un único AFD y lo minimiza. Al
+  analizar aplica dos criterios: gana la regla que reconoce el <b>lexema más largo</b> y, si hay empate, la que está
+  <b>escrita primero</b>.</p>
+<h3>2.3. Cup y el análisis LALR(1)</h3>
+<p>Cup (<i>Constructor of Useful Parsers</i>) es el equivalente de Yacc para Java. A partir de una GIC escrita en BNF
+  genera un analizador <b>ascendente LALR(1)</b>: construye la colección de elementos LR(1), fusiona los estados que
+  tienen el mismo núcleo (eso es lo que distingue LALR de LR canónico) y produce las tablas <b>ACCIÓN</b> e
+  <b>IR-A</b>. El parser es un autómata de pila que, en cada paso, mira el estado del tope de la pila y el token de
+  entrada (un símbolo de anticipación) y hace una de cuatro cosas: <b>desplazar</b> el token y pasar a un estado,
+  <b>reducir</b> por una producción (saca de la pila tantos símbolos como tiene la parte derecha, apila el no terminal
+  de la izquierda y ejecuta su acción semántica), <b>aceptar</b> o informar un <b>error</b>. El archivo de Cup tiene
+  cinco partes: paquete e importaciones, código de usuario (<code>parser code {: ... :}</code>), declaración de
+  terminales y no terminales, precedencias, y símbolo inicial con las producciones.</p>
+<h3>2.4. Integración</h3>
+<p>Cup genera dos clases: el parser y una clase de constantes con un número por cada terminal (con las opciones
+  <code>-parser Parser -symbols Simbolos</code> se llaman <code>Parser</code> y <code>Simbolos</code>, como en los
+  ejemplos de la cátedra). Con la directiva <code>%cup</code>, la clase que genera JLex implementa la interfaz
+  <code>java_cup.runtime.Scanner</code>: cada vez que el parser pide un token llama a <code>next_token()</code>, que
+  devuelve un objeto <code>java_cup.runtime.Symbol</code> con el número de terminal (el mismo de
+  <code>Simbolos</code>), su valor (el lexema) y su posición.</p>
+<h3>2.5. Recuperación de errores</h3>
+<p>Cup reserva el terminal especial <code>error</code>. Cuando la tabla indica error, el parser llama a
+  <code>syntax_error()</code>, desapila hasta encontrar un estado que pueda desplazar <code>error</code>, lo desplaza y
+  descarta tokens de entrada hasta que puede seguir analizando normalmente. Con la producción
+  <code>sentencia ::= error PTOCOMA</code> un error dentro de una sentencia hace descartar el resto de esa sentencia
+  hasta su punto y coma, y el análisis continúa con la siguiente.</p>
+
+<h2>3. Especificación léxica: archivo JLex (<code>Sql.lex</code>)</h2>
+<h3>3.1. Tokens y expresiones regulares</h3>
+<table>
+  <tr><th>Token</th><th>Expresión regular (sintaxis JLex)</th><th>Ejemplos</th></tr>
+  <tr><td>SELECT, FROM, WHERE, INSERT, INTO, VALUES, UPDATE, SET, DELETE, AND, OR, NOT</td><td class="izq mono">"SELECT" "FROM" ... "NOT"</td><td class="mono">select, Where</td></tr>
+  <tr><td>IGUAL, MENOR, MAYOR, MENORIGUAL, MAYORIGUAL</td><td class="izq mono">"=" "&lt;" "&gt;" "&lt;=" "&gt;="</td><td class="mono">&lt;=</td></tr>
+  <tr><td>MAS, MENOS, ASTERISCO, DIVISION</td><td class="izq mono">"+" "-" "*" "/"</td><td class="mono">*</td></tr>
+  <tr><td>COMA, PTOCOMA, LPAREN, RPAREN</td><td class="izq mono">"," ";" "(" ")"</td><td class="mono">;</td></tr>
+  <tr><td>IDENTIFICADOR</td><td class="izq mono">{LETRA}({LETRA}|{DIGITO})*<br>\"[^\"\r\n]+\"</td><td class="mono">agenda_telefonica<br>"nombre completo"</td></tr>
+  <tr><td>ENTERO</td><td class="izq mono">{DIGITO}+</td><td class="mono">50000</td></tr>
+  <tr><td>CADENA</td><td class="izq mono">'([^'\r\n]|'')*'</td><td class="mono">'Roberto Jeldrez'<br>'It''s ok'</td></tr>
+  <tr><td><i>se descartan</i></td><td class="izq mono">[\ \t\r\n\f]+ &nbsp; "--"[^\r\n]*</td><td>espacios, comentarios</td></tr>
+  <tr><td><i>error léxico</i></td><td class="izq mono">'([^'\r\n]|'')* &nbsp; \"[^\"\r\n]* &nbsp; .</td><td class="mono">'abc &nbsp; @ &nbsp; #</td></tr>
+</table>
+<p>con las macros <code>LETRA = [A-Za-z_]</code> y <code>DIGITO = [0-9]</code>. En notación matemática, siendo
+  <i>L</i> las letras, <i>D</i> los dígitos y <i>c</i> la comilla simple:
+  IDENTIFICADOR = <i>L</i>(<i>L</i> + <i>D</i>)*, ENTERO = <i>D</i><sup>+</sup> y
+  CADENA = <i>c</i>((Σ − {<i>c</i>, fin de línea}) + <i>cc</i>)*<i>c</i>.</p>
+<h3>3.2. Decisiones de diseño</h3>
+<ul>
+  <li><b>Palabras reservadas sin distinguir mayúsculas</b>: SQL no distingue <code>SELECT</code> de <code>select</code>.
+    Se usa la directiva <code>%ignorecase</code> de JLex en lugar de escribir <code>[Ss][Ee][Ll]...</code>.</li>
+  <li><b>Palabras reservadas antes que IDENTIFICADOR</b>: el lexema <code>FROM</code> lo reconocen las dos reglas con
+    la misma longitud, y gana la primera. En cambio <code>fromage</code> es un identificador porque esa regla reconoce
+    un lexema más largo.</li>
+  <li><b><code>&lt;=</code> y <code>&gt;=</code></b> se reconocen como un solo token por la regla del lexema más largo.
+    El operador <code>&lt;&gt;</code> no está entre los que pide el material, así que se lee como <code>&lt;</code>
+    seguido de <code>&gt;</code> y el parser lo rechaza.</li>
+  <li><b>Constantes</b>: solo enteros, como indica el material; <code>1.10</code> produce un error léxico en el punto.
+    Las cadenas usan comillas simples y admiten la comilla duplicada <code>''</code> dentro, como en SQL estándar.</li>
+  <li><b>Posiciones</b>: con <code>%char</code> cada token lleva su desplazamiento desde el inicio del archivo
+    (<code>left</code> = inicio, <code>right</code> = fin). Con eso se informa la línea y la columna de cada error y Cup
+    propaga las posiciones a los no terminales.</li>
+  <li><b>Errores léxicos</b>: la última regla (<code>.</code>) atrapa cualquier carácter que no forme parte de un token,
+    se informa con su línea y columna y el scanner sigue con el carácter siguiente (no se corta el análisis). También se
+    informan las cadenas e identificadores entre comillas que no se cierran antes del fin de línea.</li>
+  <li><b>Comentarios</b> <code>-- ...</code> hasta el fin de línea, como en SQL, para poder documentar los archivos de prueba.</li>
+</ul>
+
+<h2>4. Especificación sintáctica: archivo Cup (<code>Sql.cup</code>)</h2>
+<h3>4.1. Gramática en BNF</h3>
+<p>G = ⟨V<sub>N</sub>, V<sub>T</sub>, P, programa⟩, con los terminales de la sección 3 y las siguientes producciones
+  ({{CANTIDAD_PRODUCCIONES}} producciones; λ indica la cadena vacía):</p>
+<pre>{{BNF}}</pre>
+<p>Precedencia y asociatividad declaradas (de menor a mayor):</p>
+<pre>precedence left OR;
+precedence left AND;
+precedence right NOT;
+precedence left MAS, MENOS;
+precedence left ASTERISCO, DIVISION;</pre>
+<h3>4.2. Decisiones de diseño</h3>
+<ul>
+  <li><b>Varias sentencias por archivo</b>: <code>lista_sentencias</code> es recursiva a izquierda (la forma que
+    conviene en un parser ascendente, porque no hace crecer la pila) y cada sentencia termina en <code>;</code>.</li>
+  <li><b>Condiciones separadas de las expresiones</b>: <code>condicion</code> combina comparaciones con AND, OR y NOT;
+    <code>expresion</code> es aritmética. Así <code>WHERE sueldo</code> o <code>WHERE a + 1</code> son errores
+    sintácticos (falta la comparación) y <code>SET x = a &gt; b</code> también.</li>
+  <li><b>Ambigüedad resuelta con precedencias</b>: las reglas <code>expresion ::= expresion MAS expresion</code> o
+    <code>condicion ::= condicion AND condicion</code> son ambiguas; las declaraciones <code>precedence</code> le
+    indican a Cup cómo resolver los conflictos desplazar/reducir (por ejemplo, en <code>a + b * c</code> se desplaza el
+    <code>*</code> porque tiene mayor precedencia, y en <code>a - b - c</code> se reduce primero por la asociatividad a
+    izquierda). Con eso Cup informa <b>0 conflictos</b>.</li>
+  <li><b>Igual cantidad de columnas y valores</b>: en el INSERT con lista de columnas, la producción
+    <code>columnas_valores ::= IDENTIFICADOR COMA columnas_valores COMA expresion</code> anida cada columna con su
+    valor, igual que la gramática de <i>a<sup>n</sup>b<sup>n</sup></i>. La restricción, que una gramática regular no
+    podría expresar, queda dentro de la GIC: <code>INSERT INTO t (a, b) VALUES (1);</code> es un error sintáctico
+    ("se esperaba ','").</li>
+  <li><b>WHERE opcional</b> en SELECT, UPDATE y DELETE (<code>clausula_where ::= WHERE condicion | λ</code>). El
+    material muestra el SELECT básico sin WHERE, pero la condición es parte del estándar y de los casos de prueba.</li>
+  <li><b>Recuperación de errores</b>: <code>sentencia ::= error PTOCOMA</code>. Además se redefine
+    <code>error_sync_size()</code> para que devuelva 1: con el valor por defecto (3), después de un error Cup necesita
+    analizar bien tres tokens seguidos, y si la sentencia siguiente también tiene un error, las dos se fusionan y el
+    segundo error no se informa.</li>
+  <li><b>Mensajes de error</b>: se redefine <code>syntax_error()</code> para informar línea, columna, el token inesperado
+    y los terminales que se esperaban. Esos terminales salen de la fila del estado del tope en la tabla ACCIÓN, pero como
+    LALR fusiona estados, la fila puede tener terminales que en ese contexto no corresponden; por eso cada candidato se
+    prueba sobre una copia de la pila (aplicando las reducciones hasta ver si se desplaza). <code>unrecovered_syntax_error()</code>
+    se redefine para informar la sentencia que quedó sin cerrar al final del archivo, sin lanzar una excepción.</li>
+  <li><b>Acciones semánticas</b>: al reducir cada <code>sentencia</code> se informa si es correcta (y de qué tipo) o
+    incorrecta, junto con los errores léxicos y sintácticos que ocurrieron entre su primer token y su <code>;</code>.
+    Una sentencia sintácticamente válida que tuvo errores léxicos (el scanner descartó caracteres) se informa como
+    incorrecta.</li>
+</ul>
+<h3>4.3. Tabla LALR(1)</h3>
+<p>Cup genera {{CANTIDAD_ESTADOS}} estados sin conflictos. La tabla completa (ACCIÓN e IR-A) se puede ver en la
+  interfaz web, y la fila de cualquier estado en la consola con el comando <code>estado &lt;n&gt;</code>. Como ejemplo,
+  la traza del análisis de <code>SELECT * FROM clientes;</code>:</p>
+<table class="traza">
+  <tr><th>Paso</th><th>Pila (símbolo estado)</th><th>Entrada</th><th>Acción</th></tr>
+{{TRAZA_EJEMPLO}}</table>
+
+<h2>5. Integración del scanner y el parser: programa principal</h2>
+<p>El paquete <code>sql</code> tiene cinco clases: <code>Lexico</code> (generada por JLex), <code>Parser</code> y
+  <code>Simbolos</code> (generadas por Cup), <code>Analisis</code> y <code>Main</code>. <code>Main</code> abre el archivo
+  como flujo de caracteres (UTF-8), crea el scanner con ese flujo, crea el parser pasándole el scanner y llama a
+  <code>parse()</code>, igual que el <code>Main</code> del ejemplo <i>lenC0</i> de la cátedra. <code>Analisis</code> es
+  el estado compartido entre el scanner y el parser: guarda la posición de cada token y los errores pendientes, los
+  asigna a la sentencia en la que ocurrieron, traduce las posiciones a línea y columna y escribe el informe y el
+  resumen. El programa termina con código 0 si no hubo errores y 1 si los hubo.</p>
+
+<h2>6. Compilación y ejecución</h2>
+<p>El script <code>construir.bat</code> hace los pasos que muestran los videos de la cátedra, desde la línea de
+  comandos (requiere un JDK 8 o posterior):</p>
+<pre>javac -d build\herramientas herramientas\JLex\Main.java herramientas\java_cup\*.java herramientas\java_cup\runtime\*.java
+cd src\sql
+java -cp ..\..\build\herramientas JLex.Main Sql.lex          (genera Sql.lex.java, se renombra a Lexico.java)
+java -cp ..\..\build\herramientas java_cup.Main -parser Parser -symbols Simbolos &lt; Sql.cup
+cd ..\..
+javac -cp build\herramientas -d build\clases src\sql\*.java
+java -cp build\clases;build\herramientas sql.Main pruebas\validas.sql</pre>
+<p>Para NetBeans: crear un proyecto Java con fuentes existentes, agregar <code>src</code> (paquete <code>sql</code>) y
+  <code>herramientas</code> (paquete <code>java_cup.runtime</code>) como carpetas de fuentes y pasar la ruta del
+  archivo <code>.sql</code> como argumento en <i>Run → Set Project Configuration → Arguments</i>. Las clases generadas
+  (<code>Lexico</code>, <code>Parser</code>, <code>Simbolos</code>) están incluidas en el repositorio, así que no hace
+  falta volver a generarlas para ejecutar.</p>
+
+<h2>7. Pruebas</h2>
+<p>Los archivos de la carpeta <code>pruebas</code> incluyen los ejemplos del material de la cátedra y casos con
+  errores. Salida de <code>java sql.Main</code> para cada uno:</p>
+<h3>7.1. Sentencias válidas (<code>pruebas/validas.sql</code>)</h3>
+<pre class="largo">{{FUENTE_VALIDAS}}</pre>
+<pre class="largo">{{SALIDA_VALIDAS}}</pre>
+<h3>7.2. Sentencias con errores (<code>pruebas/invalidas.sql</code>)</h3>
+<pre class="largo">{{FUENTE_INVALIDAS}}</pre>
+<pre class="largo">{{SALIDA_INVALIDAS}}</pre>
+<p class="nota">La sentencia 10 muestra cómo un error léxico puede afectar al análisis sintáctico: la cadena
+  <code>'Ana;</code> no se cierra, así que el <code>;</code> queda dentro de ella y la sentencia de la línea siguiente
+  se toma como continuación de la anterior.</p>
+<h3>7.3. Última sentencia sin punto y coma (<code>pruebas/sin-punto-y-coma.sql</code>)</h3>
+<pre class="largo">{{FUENTE_SIN_PYC}}</pre>
+<pre class="largo">{{SALIDA_SIN_PYC}}</pre>
+<h3>7.4. Verificación de la interfaz web</h3>
+<p>El script <code>pruebas/comparar.js</code> ejecuta <code>java sql.Main</code> y el analizador de la interfaz web
+  sobre los mismos archivos y compara las salidas carácter por carácter. Además de los tres archivos anteriores se
+  compararon 200 archivos generados al azar (sentencias de prueba con caracteres insertados, borrados y movidos, con
+  fines de línea Windows y Unix): las salidas fueron idénticas en todos los casos.</p>
+
+<h2>8. Interfaces web y de consola</h2>
+<p>Para usar el analizador sin instalar Java se publicaron dos interfaces en GitHub Pages. No reimplementan la
+  gramática: el scanner reproduce las mismas reglas de <code>Sql.lex</code> (lexema más largo, y a igual longitud la
+  primera regla), y el parser ejecuta las tablas que generó Cup, exportadas desde <code>Parser.java</code> por
+  <code>herramientas/exportar/ExportarTablas.java</code>, con el mismo algoritmo de
+  <code>java_cup.runtime.lr_parser</code>, incluida la recuperación de errores.</p>
+<ul>
+  <li><b>Interfaz gráfica</b> (<code>index.html</code>): editor del archivo de entrada (o apertura de un
+    <code>.sql</code>), informe por sentencia con los errores marcados sobre el texto, árbol de análisis sintáctico de
+    cada sentencia, tabla de tokens, traza del parser, especificación (expresiones regulares y GIC) y tabla LALR(1)
+    completa.</li>
+  <li><b>Consola</b> (<code>consola.html</code>), al estilo de una TUI: se escriben sentencias (pueden ocupar varias
+    líneas hasta el <code>;</code>) o comandos: <code>ejemplo</code>, <code>archivo</code>, <code>tokens on|off</code>,
+    <code>arbol on|off</code>, <code>traza on|off</code>, <code>gramatica</code>, <code>lexico</code>,
+    <code>producciones</code>, <code>estado &lt;n&gt;</code>, con historial y atajos de teclado.</li>
+</ul>
+<div class="figura"><img src="img/interfaz-web.png" alt="Interfaz gráfica"><div class="epigrafe">Figura 1. Interfaz
+  gráfica con el archivo de sentencias con errores.</div></div>
+<div class="figura"><img src="img/consola.png" alt="Consola"><div class="epigrafe">Figura 2. Consola: archivo sin
+  punto y coma final y árbol de la sentencia incompleta.</div></div>
+
+<h2>9. Conclusiones</h2>
+<p>JLex y Cup separan el problema en las dos capas de la jerarquía de Chomsky que corresponden: los componentes
+  léxicos, regulares, se describen con expresiones regulares y se reconocen con el AFD que genera JLex; la estructura de
+  las sentencias, independiente del contexto, se describe con una GIC y se reconoce con el autómata de pila LALR(1) que
+  genera Cup. A partir de las especificaciones (<code>Sql.lex</code> de {{LINEAS_LEX}} líneas y <code>Sql.cup</code> de
+  {{LINEAS_CUP}}) las herramientas generaron {{LINEAS_GENERADAS}} líneas de Java, con tablas de {{CANTIDAD_ESTADOS}} estados. Las restricciones que
+  parecen "de contexto", como la igualdad entre la cantidad de columnas y de valores, se pudieron expresar en la GIC
+  porque tienen la forma <i>a<sup>n</sup>b<sup>n</sup></i>. La parte que más trabajo llevó fue el tratamiento de
+  errores: ubicar cada error en su sentencia, sincronizar después de un error y dar mensajes que indiquen qué se
+  esperaba.</p>
+
+<h2 class="salto">Anexo A: Código fuente</h2>
+<h3>A.1. <code>src/sql/Sql.lex</code></h3>
+<pre class="codigo">{{CODIGO_LEX}}</pre>
+<h3>A.2. <code>src/sql/Sql.cup</code></h3>
+<pre class="codigo">{{CODIGO_CUP}}</pre>
+<h3>A.3. <code>src/sql/Main.java</code></h3>
+<pre class="codigo">{{CODIGO_MAIN}}</pre>
+<h3>A.4. <code>src/sql/Analisis.java</code></h3>
+<pre class="codigo">{{CODIGO_ANALISIS}}</pre>
+</body>
+</html>

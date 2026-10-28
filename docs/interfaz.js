@@ -177,9 +177,9 @@
       return "\\left\\{\\begin{array}{l}" + filas.join(",\\\\") + "\\end{array}\\right\\}";
     };
     tex($("gic"), [
-      "G = \\langle V_N,\\ V_T,\\ P,\\ \\mathrm{programa} \\rangle",
-      "V_N = " + conjunto(vn, 6),
-      "V_T = " + conjunto(vt, 8),
+      "G = \\langle \\Sigma_N,\\ \\Sigma_T,\\ P,\\ \\mathrm{programa} \\rangle",
+      "\\Sigma_N = " + conjunto(vn, 6),
+      "\\Sigma_T = " + conjunto(vt, 8),
       "|P| = " + (T.producciones.length - 1) + " \\text{ producciones (más } \\$START \\to \\mathrm{programa\\ EOF} \\text{, que agrega CUP)}"
     ]);
     $("bnf").textContent = Vistas.bnfTexto();

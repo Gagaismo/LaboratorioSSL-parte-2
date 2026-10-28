@@ -159,7 +159,7 @@
     },
 
     gramatica: function () {
-      escribir("GIC G = ⟨VN, VT, P, programa⟩ en BNF (λ = cadena vacía):", "tenue");
+      escribir("GIC G = ⟨ΣN, ΣT, P, programa⟩ en BNF (λ = cadena vacía):", "tenue");
       bloque(esc(Vistas.bnfTexto()));
       escribir("Precedencia (de menor a mayor): OR < AND < NOT (derecha) < + - < * /   (todas asociativas a izquierda salvo NOT)", "tenue");
     },

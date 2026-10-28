@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Analizador Sintáctico SQL</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<link rel="stylesheet" href="estilo.css?v=1">
+</head>
+<body>
+<header>
+  <div class="contenido">
+    <p>UTN FRT · Sintaxis y Semántica de los Lenguajes · Actividad de Laboratorio · 2do Parcial</p>
+    <h1>Analizador Sintáctico del LMD de SQL</h1>
+    <p class="subtitulo">Scanner generado con JLex y parser LALR(1) generado con CUP, en Java</p>
+    <nav>
+      <a href="#analizador">Analizador</a>
+      <a href="#arbol-panel">Árbol</a>
+      <a href="#lexico">Tokens</a>
+      <a href="#sintactico">Traza LALR</a>
+      <a href="#especificacion">Especificación</a>
+      <a href="#tabla">Tabla LALR(1)</a>
+      <a href="consola.html">Consola (TUI)</a>
+      <a href="informe.pdf">Informe (PDF)</a>
+      <a href="informe.html">Informe (HTML)</a>
+      <a href="https://github.com/Gagaismo/LaboratorioSSL-parte-2">Código</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="panel" id="analizador">
+    <h2>Analizador</h2>
+    <p class="consigna">Escribí una o varias sentencias <b>SELECT</b>, <b>INSERT</b>, <b>UPDATE</b> o <b>DELETE</b>
+      terminadas en punto y coma, o abrí un archivo <code>.sql</code>. El scanner reproduce las expresiones regulares de
+      <code>Sql.lex</code> y el parser ejecuta las mismas tablas LALR(1) que CUP generó para <code>Parser.java</code>,
+      así que el resultado es idéntico al del programa en Java.</p>
+    <label for="fuente">Archivo de entrada</label>
+    <textarea id="fuente" rows="12" spellcheck="false" autocomplete="off"></textarea>
+    <div class="fila acciones">
+      <button id="analizar">Analizar</button>
+      <span class="ejemplos">Ejemplos:
+        <button class="secundario" data-ejemplo="validas">Sentencias válidas</button>
+        <button class="secundario" data-ejemplo="invalidas">Con errores</button>
+        <button class="secundario" data-ejemplo="sin-punto-y-coma">Sin ';' final</button>
+      </span>
+      <label class="boton-archivo secundario">Abrir archivo .sql
+        <input type="file" id="archivo" accept=".sql,.txt,text/plain">
+      </label>
+    </div>
+    <div id="resumen" class="resultado" hidden></div>
+    <div id="sentencias" class="sentencias"></div>
+    <details>
+      <summary>Salida de consola (la misma que imprime <code>java sql.Main</code>)</summary>
+      <pre id="salida-texto" class="salida"></pre>
+    </details>
+  </section>
+
+  <section class="panel" id="arbol-panel">
+    <h2>Árbol de análisis sintáctico</h2>
+    <p class="consigna">Árbol que construye el parser al reducir cada sentencia (de abajo hacia arriba). Las hojas son los
+      tokens; los nodos verdes, los no terminales de la GIC; en rojo, el símbolo <code>error</code> con los tokens que
+      descartó la recuperación.</p>
+    <div class="fila">
+      <div>
+        <label for="elegir-sentencia">Sentencia</label>
+        <select id="elegir-sentencia"></select>
+      </div>
+    </div>
+    <div id="arbol" class="lienzo arbol-lienzo"></div>
+  </section>
+
+  <section class="panel" id="lexico">
+    <h2>Análisis léxico: tokens</h2>
+    <p class="consigna">Secuencia de tokens que el scanner (<code>Lexico</code>, generado por JLex) le entrega al parser.
+      Los espacios y los comentarios <code>--</code> se descartan; los errores léxicos se informan y el análisis
+      continúa con el carácter siguiente.</p>
+    <div class="tabla-scroll alto"><table id="tokens"></table></div>
+  </section>
+
+  <section class="panel" id="sintactico">
+    <h2>Análisis sintáctico: traza del parser LALR(1)</h2>
+    <p class="consigna">Cada paso del algoritmo de <code>java_cup.runtime.lr_parser</code>: la pila (símbolo y estado),
+      el token de entrada y la acción: <b>desplazar</b> el token e ir a un estado, <b>reducir</b> por una producción
+      (se ejecuta su acción semántica), <b>error</b> (se informa y se recupera con <code>sentencia ::= error PTOCOMA</code>)
+      o <b>aceptar</b>.</p>
+    <div class="tabla-scroll alto"><table id="traza"></table></div>
+    <p class="tenue" id="traza-nota"></p>
+  </section>
+
+  <section class="panel" id="especificacion">
+    <h2>Especificación</h2>
+    <h3>Componentes léxicos (expresiones regulares de <code>Sql.lex</code>)</h3>
+    <div class="modelo" id="er"></div>
+    <div class="tabla-scroll"><table id="tabla-tokens"></table></div>
+    <h3>Gramática independiente del contexto (BNF de <code>Sql.cup</code>)</h3>
+    <div class="modelo" id="gic"></div>
+    <pre id="bnf" class="salida"></pre>
+    <h3>Precedencia y asociatividad (de menor a mayor)</h3>
+    <pre class="salida">precedence left OR;
+precedence left AND;
+precedence right NOT;
+precedence left MAS, MENOS;
+precedence left ASTERISCO, DIVISION;</pre>
+  </section>
+
+  <section class="panel" id="tabla">
+    <h2>Tabla LALR(1) generada por CUP</h2>
+    <p class="consigna">ACCIÓN: <b>dN</b> desplazar e ir al estado N, <b>rN</b> reducir con la producción N,
+      <b>acc</b> aceptar, vacío = error. IR-A: estado al que se pasa después de reducir a ese no terminal.
+      CUP no informó conflictos.</p>
+    <div class="tabla-scroll alto"><table id="lalr" class="compacta"></table></div>
+    <details>
+      <summary>Producciones numeradas</summary>
+      <pre id="producciones" class="salida"></pre>
+    </details>
+  </section>
+</main>
+
+<footer>UTN FRT · Sintaxis y Semántica de los Lenguajes · 2026</footer>
+
+<script src="tablas.js?v=1"></script>
+<script src="analizador.js?v=1"></script>
+<script src="vistas.js?v=1"></script>
+<script src="ejemplos.js?v=1"></script>
+<script src="interfaz.js?v=1"></script>
+</body>
+</html>

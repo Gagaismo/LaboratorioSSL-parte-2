@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Consola SQL</title>
+<style>
+  :root {
+    --fondo: #0d1117;
+    --barra: #1f6feb;
+    --barra-texto: #ffffff;
+    --texto: #c9d1d9;
+    --tenue: #8b949e;
+    --ok: #3fb950;
+    --error: #f85149;
+    --aviso: #d29922;
+    --cmd: #e3b341;
+    --prompt: #58a6ff;
+    --mono: "Cascadia Mono", "Consolas", "DejaVu Sans Mono", "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--fondo);
+    color: var(--texto);
+    font: 14px/1.4 var(--mono);
+    display: flex;
+    flex-direction: column;
+  }
+  .barra {
+    background: var(--barra);
+    color: var(--barra-texto);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 12px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .barra a { color: var(--barra-texto); }
+  #salida {
+    flex: 1;
+    overflow: auto;
+    padding: 10px 12px;
+  }
+  .linea { white-space: pre-wrap; word-break: break-word; }
+  .linea pre, .linea.pre { margin: 2px 0; white-space: pre; font: inherit; line-height: 1.2; }
+  .titulo { color: var(--prompt); }
+  .tenue { color: var(--tenue); }
+  .ok { color: var(--ok); }
+  .error, pre .error { color: var(--error); }
+  .aviso, pre .aviso { color: var(--aviso); }
+  .cmd { color: var(--cmd); }
+  .prompt { color: var(--prompt); }
+  .linea-entrada {
+    display: flex;
+    gap: 8px;
+    padding: 6px 12px;
+    border-top: 1px solid #30363d;
+  }
+  #entrada {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--texto);
+    font: inherit;
+    font-size: 16px;
+    caret-color: var(--cmd);
+  }
+  .teclas { display: flex; gap: 2px; flex-wrap: wrap; }
+  .teclas button {
+    background: none;
+    border: none;
+    color: var(--barra-texto);
+    font: inherit;
+    padding: 0 6px;
+    cursor: pointer;
+  }
+  .teclas b { background: var(--barra-texto); color: var(--barra); padding: 0 3px; margin-right: 3px; }
+</style>
+</head>
+<body>
+  <div class="barra">
+    <span>2do Parcial · SSL · UTN FRT ─ Analizador Sintáctico del LMD de SQL (JLex + CUP)</span>
+    <span><a href="index.html">interfaz gráfica</a> · <span id="estado"></span></span>
+  </div>
+  <div id="salida" role="log" aria-live="polite"></div>
+  <div class="linea-entrada">
+    <span class="prompt" id="prompt">sql&gt;</span>
+    <input id="entrada" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Comando o sentencia SQL">
+  </div>
+  <div class="barra teclas">
+    <button data-tecla="F1"><b>F1</b>ayuda</button>
+    <button data-tecla="F2"><b>F2</b>válidas</button>
+    <button data-tecla="F3"><b>F3</b>con errores</button>
+    <button data-tecla="F4"><b>F4</b>gramática</button>
+    <button data-tecla="F5"><b>F5</b>tokens</button>
+    <button data-tecla="F6"><b>F6</b>árbol</button>
+    <button data-tecla="F7"><b>F7</b>traza</button>
+    <button data-tecla="L"><b>^L</b>limpiar</button>
+  </div>
+<script src="tablas.js?v=1"></script>
+<script src="analizador.js?v=1"></script>
+<script src="vistas.js?v=1"></script>
+<script src="ejemplos.js?v=1"></script>
+<script src="consola.js?v=1"></script>
+</body>
+</html>

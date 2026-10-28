@@ -1,0 +1,184 @@
+package sql;
+
+import java_cup.runtime.*;
+import java.util.ArrayList;
+import java.util.List;
+
+parser code {:
+  /* Estado compartido con el scanner: posiciones de tokens y errores. */
+  Analisis analisis;
+
+  public void setAnalisis(Analisis analisis) {
+    this.analisis = analisis;
+  }
+
+  /* Despues de un error basta con poder desplazar un token (el ';' de la
+     produccion sentencia ::= error PTOCOMA) para seguir analizando, asi
+     dos sentencias erroneas seguidas se informan por separado. */
+  protected int error_sync_size() {
+    return 1;
+  }
+
+  /* Error sintactico: se informa el token inesperado y los terminales que
+     podrian haber seguido en su lugar. */
+  public void syntax_error(Symbol actual) {
+    analisis.errorSintactico(actual, terminalesEsperados());
+  }
+
+  /* Solo ocurre al llegar al fin de archivo sin poder recuperarse
+     (por ejemplo, falta el ';' de la ultima sentencia). */
+  public void unrecovered_syntax_error(Symbol actual) {
+    analisis.sinRecuperacion();
+  }
+
+  /* La fila de la tabla de acciones del estado del tope puede tener
+     terminales de mas (LALR fusiona estados con el mismo nucleo), por eso
+     cada candidato se prueba sobre una copia de la pila: se aplican las
+     reducciones hasta ver si el terminal se desplaza o da error. */
+  private List terminalesEsperados() {
+    List esperados = new ArrayList();
+    short[] fila = action_tab[((Symbol) stack.peek()).parse_state];
+    for (int i = 0; i + 1 < fila.length; i += 2) {
+      int terminal = fila[i];
+      if (terminal != -1 && terminal != error_sym() && admite(terminal)) {
+        esperados.add(new Integer(terminal));
+      }
+    }
+    java.util.Collections.sort(esperados);
+    return esperados;
+  }
+
+  private boolean admite(int terminal) {
+    List pila = new ArrayList();
+    for (int i = 0; i < stack.size(); i++) {
+      pila.add(new Integer(((Symbol) stack.elementAt(i)).parse_state));
+    }
+    while (true) {
+      int tope = ((Integer) pila.get(pila.size() - 1)).intValue();
+      int accion = get_action(tope, terminal);
+      if (accion == 0) return false;
+      if (accion > 0) return true;
+      int produccion = -accion - 1;
+      if (produccion == start_production()) return true;
+      for (int i = 0; i < production_tab[produccion][1]; i++) {
+        pila.remove(pila.size() - 1);
+      }
+      tope = ((Integer) pila.get(pila.size() - 1)).intValue();
+      pila.add(new Integer(get_reduce(tope, production_tab[produccion][0])));
+    }
+  }
+:};
+
+/* Terminales: uno por cada token que devuelve el scanner (Lexico). */
+terminal String SELECT, FROM, WHERE, INSERT, INTO, VALUES, UPDATE, SET, DELETE;
+terminal String AND, OR, NOT;
+terminal String IGUAL, MENOR, MAYOR, MENORIGUAL, MAYORIGUAL;
+terminal String MAS, MENOS, ASTERISCO, DIVISION;
+terminal String COMA, PTOCOMA, LPAREN, RPAREN;
+terminal String IDENTIFICADOR, ENTERO, CADENA;
+
+non terminal programa, lista_sentencias, sentencia;
+non terminal sent_select, sent_insert, sent_update, sent_delete;
+non terminal proyeccion, lista_columnas, clausula_where;
+non terminal columnas_valores, lista_valores;
+non terminal lista_asignaciones, asignacion;
+non terminal condicion, operador_relacional, expresion;
+
+/* De menor a mayor precedencia. */
+precedence left OR;
+precedence left AND;
+precedence right NOT;
+precedence left MAS, MENOS;
+precedence left ASTERISCO, DIVISION;
+
+start with programa;
+
+programa ::= lista_sentencias
+           |
+           ;
+
+lista_sentencias ::= lista_sentencias sentencia
+                   | sentencia
+                   ;
+
+sentencia ::= sent_select PTOCOMA:p
+                {: parser.analisis.cerrarSentencia("SELECT", pright); :}
+            | sent_insert PTOCOMA:p
+                {: parser.analisis.cerrarSentencia("INSERT", pright); :}
+            | sent_update PTOCOMA:p
+                {: parser.analisis.cerrarSentencia("UPDATE", pright); :}
+            | sent_delete PTOCOMA:p
+                {: parser.analisis.cerrarSentencia("DELETE", pright); :}
+            | error PTOCOMA:p
+                {: parser.analisis.cerrarSentencia(null, pright); :}
+            ;
+
+/* SELECT * FROM tabla [WHERE condicion]
+   SELECT columna1, columna2... FROM tabla [WHERE condicion] */
+sent_select ::= SELECT proyeccion FROM IDENTIFICADOR clausula_where ;
+
+proyeccion ::= ASTERISCO
+             | lista_columnas
+             ;
+
+lista_columnas ::= lista_columnas COMA IDENTIFICADOR
+                 | IDENTIFICADOR
+                 ;
+
+clausula_where ::= WHERE condicion
+                 |
+                 ;
+
+/* INSERT INTO tabla (columna1, columna2...) VALUES (valor1, valor2...)
+   INSERT INTO tabla VALUES (valor1, valor2...)
+   En la forma con columnas, columnas_valores anida cada columna con su
+   valor (como a^n b^n), asi la GIC exige la misma cantidad de ambos. */
+sent_insert ::= INSERT INTO IDENTIFICADOR LPAREN columnas_valores RPAREN
+              | INSERT INTO IDENTIFICADOR VALUES LPAREN lista_valores RPAREN
+              ;
+
+columnas_valores ::= IDENTIFICADOR RPAREN VALUES LPAREN expresion
+                   | IDENTIFICADOR COMA columnas_valores COMA expresion
+                   ;
+
+lista_valores ::= lista_valores COMA expresion
+                | expresion
+                ;
+
+/* UPDATE tabla SET columna1 = valor1, columna2 = valor2... [WHERE condicion] */
+sent_update ::= UPDATE IDENTIFICADOR SET lista_asignaciones clausula_where ;
+
+lista_asignaciones ::= lista_asignaciones COMA asignacion
+                     | asignacion
+                     ;
+
+asignacion ::= IDENTIFICADOR IGUAL expresion ;
+
+/* DELETE FROM tabla [WHERE condicion] */
+sent_delete ::= DELETE FROM IDENTIFICADOR clausula_where ;
+
+/* Condiciones: comparaciones combinadas con AND, OR y NOT. */
+condicion ::= condicion OR condicion
+            | condicion AND condicion
+            | NOT condicion
+            | expresion operador_relacional expresion
+            | LPAREN condicion RPAREN
+            ;
+
+operador_relacional ::= IGUAL
+                      | MENOR
+                      | MAYOR
+                      | MENORIGUAL
+                      | MAYORIGUAL
+                      ;
+
+/* Expresiones aritmeticas con enteros, cadenas y columnas. */
+expresion ::= expresion MAS expresion
+            | expresion MENOS expresion
+            | expresion ASTERISCO expresion
+            | expresion DIVISION expresion
+            | LPAREN expresion RPAREN
+            | ENTERO
+            | CADENA
+            | IDENTIFICADOR
+            ;

@@ -79,6 +79,7 @@ terminal String IDENTIFICADOR, ENTERO, CADENA;
 
 non terminal programa, lista_sentencias, sentencia;
 non terminal sent_select, sent_insert, sent_update, sent_delete;
+non terminal sent_generica, elementos_genericos, elemento_generico;
 non terminal proyeccion, lista_columnas, clausula_where;
 non terminal columnas_valores, lista_valores;
 non terminal lista_asignaciones, asignacion;
@@ -109,6 +110,8 @@ sentencia ::= sent_select PTOCOMA:p
                 {: parser.analisis.cerrarSentencia("UPDATE", pright); :}
             | sent_delete PTOCOMA:p
                 {: parser.analisis.cerrarSentencia("DELETE", pright); :}
+            | sent_generica PTOCOMA:p
+                {: parser.analisis.cerrarSentencia("SQL", pright); :}
             | error PTOCOMA:p
                 {: parser.analisis.cerrarSentencia(null, pright); :}
             ;
@@ -156,6 +159,44 @@ asignacion ::= IDENTIFICADOR IGUAL expresion ;
 
 /* DELETE FROM tabla [WHERE condicion] */
 sent_delete ::= DELETE FROM IDENTIFICADOR clausula_where ;
+
+/* Cualquier otra sentencia SQL se valida léxicamente y se acepta como una
+   sentencia genérica. Las cuatro formas anteriores conservan su validación
+   sintáctica detallada. El primer identificador representa palabras
+   reservadas que no forman parte del subconjunto específico de la cátedra. */
+sent_generica ::= IDENTIFICADOR elementos_genericos ;
+
+elementos_genericos ::= elementos_genericos elemento_generico
+                      |
+                      ;
+
+elemento_generico ::= IDENTIFICADOR
+                    | ENTERO
+                    | CADENA
+                    | SELECT
+                    | FROM
+                    | WHERE
+                    | INSERT
+                    | INTO
+                    | VALUES
+                    | UPDATE
+                    | SET
+                    | DELETE
+                    | AND
+                    | OR
+                    | NOT
+                    | IGUAL
+                    | MENOR
+                    | MAYOR
+                    | MENORIGUAL
+                    | MAYORIGUAL
+                    | MAS
+                    | MENOS
+                    | ASTERISCO
+                    | DIVISION
+                    | COMA
+                    | LPAREN elementos_genericos RPAREN
+                    ;
 
 /* Condiciones: comparaciones combinadas con AND, OR y NOT. */
 condicion ::= condicion OR condicion

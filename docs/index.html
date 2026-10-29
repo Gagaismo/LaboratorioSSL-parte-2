@@ -32,8 +32,9 @@
 <main>
   <section class="panel" id="analizador">
     <h2>Analizador</h2>
-    <p class="consigna">Escribí una o varias sentencias <b>SELECT</b>, <b>INSERT</b>, <b>UPDATE</b> o <b>DELETE</b>
-      terminadas en punto y coma, o abrí un archivo <code>.sql</code>. El scanner reproduce las expresiones regulares de
+    <p class="consigna">Escribí una o varias sentencias SQL terminadas en punto y coma, o abrí un archivo
+      <code>.sql</code>. <b>SELECT</b>, <b>INSERT</b>, <b>UPDATE</b> y <b>DELETE</b> tienen validación sintáctica
+      detallada; las demás sentencias se validan como SQL genérico. El scanner reproduce las expresiones regulares de
       <code>Sql.lex</code> y el parser ejecuta las mismas tablas LALR(1) que CUP generó para <code>Parser.java</code>,
       así que el resultado es idéntico al del programa en Java.</p>
     <label for="fuente">Archivo de entrada</label>

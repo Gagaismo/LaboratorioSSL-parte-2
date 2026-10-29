@@ -94,12 +94,33 @@
     return texto.split("\n").map(function (l) { return "    " + l; }).join("\n");
   }
 
+  function analizarPendiente() {
+    if (!pendiente.length) return escribir("No hay una sentencia pendiente.", "error");
+    var texto = pendiente.join("\n");
+    pendiente = [];
+    actualizarPrompt();
+    analizarTexto(texto);
+  }
+
+  function analizarEntrada() {
+    var linea = entrada.value;
+    entrada.value = "";
+    if (linea.trim()) {
+      historial.push(linea);
+      posHistorial = historial.length;
+      pendiente.push(linea);
+    }
+    analizarPendiente();
+  }
+
   // ---------- Comandos ----------
 
   var comandos = {
     ayuda: function () {
       bloque(esc([
         "Escribí sentencias SQL terminadas en ';' (pueden ocupar varias líneas; el prompt cambia a -> hasta el ';').",
+        "  fin | analizar                     Finaliza la entrada pendiente y detecta si falta ';'.",
+        "  También podés usar Ctrl+Enter para finalizar una sentencia sin ';'.",
         "Ejemplo: SELECT nombre, apellido FROM personas WHERE edad >= 18;",
         "",
         "Comandos:",
@@ -200,10 +221,12 @@
     },
 
     cancelar: function () { pendiente = []; actualizarPrompt(); escribir("Sentencia descartada.", "tenue"); },
+    fin: analizarPendiente,
+    analizar: analizarPendiente,
     limpiar: function () { salida.innerHTML = ""; }
   };
   var alias = { help: "ayuda", "?": "ayuda", clear: "limpiar", cls: "limpiar", "árbol": "arbol", "gramática": "gramatica",
-                "léxico": "lexico", ejemplos: "ejemplo" };
+                "léxico": "lexico", ejemplos: "ejemplo", enviar: "fin" };
 
   function describirAccion(c) {
     if (c === "acc") return "aceptar";
@@ -232,7 +255,8 @@
       comandos[alias[nombre] || nombre](m[2].trim());
       return;
     }
-    if (pendiente.length > 0 && /^\s*cancelar\s*$/i.test(linea)) return comandos.cancelar();
+    if (pendiente.length > 0 && /^\s*(cancelar)\s*$/i.test(linea)) return comandos.cancelar();
+    if (pendiente.length > 0 && /^\s*(fin|analizar|enviar)\s*$/i.test(linea)) return analizarPendiente();
     pendiente.push(linea);
     var texto = pendiente.join("\n");
     // La sentencia se analiza cuando la última línea termina en ';'.
@@ -253,7 +277,10 @@
   }
 
   entrada.addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && e.ctrlKey) {
+      e.preventDefault();
+      analizarEntrada();
+    } else if (e.key === "Enter") {
       var linea = entrada.value;
       entrada.value = "";
       if (!linea.trim() && pendiente.length === 0) return;
@@ -311,6 +338,7 @@
     .concat(banner.map(function (s) { return "║  " + s + " ".repeat(ancho - s.length - 2) + "║"; }))
     .concat(["╚" + "═".repeat(ancho) + "╝"]).join("\n")), "pre titulo");
   escribir('Escribí una sentencia SQL terminada en ";" o <span class="cmd">ayuda</span> para ver los comandos.'
+           + ' Para analizar una sentencia sin ";" usá <span class="cmd">Ctrl+Enter</span> o <span class="cmd">fin</span>.'
            + ' Probá <span class="cmd">ejemplo errores</span>.', "tenue");
   actualizarEstado();
   // consola.html#ejemplo%20errores ejecuta ese comando (varios separados por "|").

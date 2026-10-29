@@ -2,7 +2,7 @@
 
 Actividad de Laboratorio del 2do Parcial de **Sintaxis y Semántica de los Lenguajes** (UTN FRT).
 
-Parser en Java para las instrucciones `SELECT`, `INSERT`, `UPDATE` y `DELETE` de SQL. El scanner lo genera **JLex** a partir de las expresiones regulares de los componentes léxicos y el parser LALR(1) lo genera **Cup** a partir de una GIC en BNF. El programa lee un archivo de texto con sentencias SQL y por cada sentencia informa si es correcta, o qué errores léxicos y sintácticos tiene, con su línea y columna.
+Parser en Java para sentencias SQL. `SELECT`, `INSERT`, `UPDATE` y `DELETE` tienen validación sintáctica detallada; cualquier otra sentencia se valida como SQL genérico. El scanner lo genera **JLex** a partir de las expresiones regulares de los componentes léxicos y el parser LALR(1) lo genera **Cup** a partir de una GIC en BNF. El programa lee un archivo de texto con sentencias SQL y por cada sentencia informa si es correcta, o qué errores léxicos y sintácticos tiene, con su línea y columna.
 
 - Interfaz gráfica: https://gagaismo.github.io/LaboratorioSSL-parte-2/
 - Consola (TUI): https://gagaismo.github.io/LaboratorioSSL-parte-2/consola.html

@@ -11,7 +11,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 
 /**
- * Analizador sintáctico del LMD de SQL (SELECT, INSERT, UPDATE, DELETE).
+ * Analizador sintáctico del LMD de SQL, con validación genérica para otras
+ * sentencias SQL.
  * Uso: java sql.Main archivo.sql
  * El scanner (Lexico, generado por JLex) lee el archivo y le entrega los
  * tokens al parser (Parser, generado por CUP), que informa por cada

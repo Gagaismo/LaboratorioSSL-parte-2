@@ -189,7 +189,7 @@ SELECT columna1, columna2... FROM tabla ;</pre>
 <h2>4. Especificación sintáctica: archivo Cup (<code>Sql.cup</code>)</h2>
 <h3>4.1. Gramática en BNF</h3>
 <p>G = ⟨Σ<sub>N</sub>, Σ<sub>T</sub>, P, programa⟩, con los terminales de la sección 3 y las siguientes producciones
-  (45 producciones; λ indica la cadena vacía):</p>
+  (75 producciones; λ indica la cadena vacía):</p>
 <pre>$START              ::= programa EOF
 programa            ::= lista_sentencias
                       | λ
@@ -199,6 +199,7 @@ sentencia           ::= sent_select PTOCOMA
                       | sent_insert PTOCOMA
                       | sent_update PTOCOMA
                       | sent_delete PTOCOMA
+                      | sent_generica PTOCOMA
                       | error PTOCOMA
 sent_select         ::= SELECT proyeccion FROM IDENTIFICADOR clausula_where
 proyeccion          ::= ASTERISCO
@@ -218,6 +219,35 @@ lista_asignaciones  ::= lista_asignaciones COMA asignacion
                       | asignacion
 asignacion          ::= IDENTIFICADOR IGUAL expresion
 sent_delete         ::= DELETE FROM IDENTIFICADOR clausula_where
+sent_generica       ::= IDENTIFICADOR elementos_genericos
+elementos_genericos ::= elementos_genericos elemento_generico
+                      | λ
+elemento_generico   ::= IDENTIFICADOR
+                      | ENTERO
+                      | CADENA
+                      | SELECT
+                      | FROM
+                      | WHERE
+                      | INSERT
+                      | INTO
+                      | VALUES
+                      | UPDATE
+                      | SET
+                      | DELETE
+                      | AND
+                      | OR
+                      | NOT
+                      | IGUAL
+                      | MENOR
+                      | MAYOR
+                      | MENORIGUAL
+                      | MAYORIGUAL
+                      | MAS
+                      | MENOS
+                      | ASTERISCO
+                      | DIVISION
+                      | COMA
+                      | LPAREN elementos_genericos RPAREN
 condicion           ::= condicion OR condicion
                       | condicion AND condicion
                       | NOT condicion
@@ -276,24 +306,24 @@ precedence left ASTERISCO, DIVISION;</pre>
     incorrecta.</li>
 </ul>
 <h3>4.3. Tabla LALR(1)</h3>
-<p>Cup genera 97 estados sin conflictos. La tabla completa (ACCIÓN e IR-A) se puede ver en la
+<p>Cup genera 130 estados sin conflictos. La tabla completa (ACCIÓN e IR-A) se puede ver en la
   interfaz web, y la fila de cualquier estado en la consola con el comando <code>estado &lt;n&gt;</code>. Como ejemplo,
   la traza del análisis de <code>SELECT * FROM clientes;</code>:</p>
 <table class="traza">
   <tr><th>Paso</th><th>Pila (símbolo estado)</th><th>Entrada</th><th>Acción</th></tr>
 <tr><td class="izq mono">1</td><td class="izq mono">0</td><td class="izq mono">SELECT</td><td class="izq mono">desplazar 9</td></tr>
-<tr><td class="izq mono">2</td><td class="izq mono">0 SELECT 9</td><td class="izq mono">*</td><td class="izq mono">desplazar 50</td></tr>
-<tr><td class="izq mono">3</td><td class="izq mono">0 SELECT 9 ASTERISCO 50</td><td class="izq mono">FROM</td><td class="izq mono">reducir proyeccion ::= ASTERISCO</td></tr>
-<tr><td class="izq mono">4</td><td class="izq mono">0 SELECT 9 proyeccion 52</td><td class="izq mono">FROM</td><td class="izq mono">desplazar 56</td></tr>
-<tr><td class="izq mono">5</td><td class="izq mono">0 SELECT 9 proyeccion 52 FROM 56</td><td class="izq mono">clientes</td><td class="izq mono">desplazar 57</td></tr>
-<tr><td class="izq mono">6</td><td class="izq mono">0 SELECT 9 proyeccion 52 FROM 56 IDENTIFICADOR 57</td><td class="izq mono">;</td><td class="izq mono">reducir clausula_where ::=</td></tr>
-<tr><td class="izq mono">7</td><td class="izq mono">0 SELECT 9 proyeccion 52 FROM 56 IDENTIFICADOR 57 clausula_where 59</td><td class="izq mono">;</td><td class="izq mono">reducir sent_select ::= SELECT proyeccion FROM IDENTIFICADOR clausula_where</td></tr>
-<tr><td class="izq mono">8</td><td class="izq mono">0 sent_select 4</td><td class="izq mono">;</td><td class="izq mono">desplazar 85</td></tr>
-<tr><td class="izq mono">9</td><td class="izq mono">0 sent_select 4 PTOCOMA 85</td><td class="izq mono">EOF</td><td class="izq mono">reducir sentencia ::= sent_select PTOCOMA</td></tr>
+<tr><td class="izq mono">2</td><td class="izq mono">0 SELECT 9</td><td class="izq mono">*</td><td class="izq mono">desplazar 83</td></tr>
+<tr><td class="izq mono">3</td><td class="izq mono">0 SELECT 9 ASTERISCO 83</td><td class="izq mono">FROM</td><td class="izq mono">reducir proyeccion ::= ASTERISCO</td></tr>
+<tr><td class="izq mono">4</td><td class="izq mono">0 SELECT 9 proyeccion 85</td><td class="izq mono">FROM</td><td class="izq mono">desplazar 89</td></tr>
+<tr><td class="izq mono">5</td><td class="izq mono">0 SELECT 9 proyeccion 85 FROM 89</td><td class="izq mono">clientes</td><td class="izq mono">desplazar 90</td></tr>
+<tr><td class="izq mono">6</td><td class="izq mono">0 SELECT 9 proyeccion 85 FROM 89 IDENTIFICADOR 90</td><td class="izq mono">;</td><td class="izq mono">reducir clausula_where ::=</td></tr>
+<tr><td class="izq mono">7</td><td class="izq mono">0 SELECT 9 proyeccion 85 FROM 89 IDENTIFICADOR 90 clausula_where 92</td><td class="izq mono">;</td><td class="izq mono">reducir sent_select ::= SELECT proyeccion FROM IDENTIFICADOR clausula_where</td></tr>
+<tr><td class="izq mono">8</td><td class="izq mono">0 sent_select 4</td><td class="izq mono">;</td><td class="izq mono">desplazar 118</td></tr>
+<tr><td class="izq mono">9</td><td class="izq mono">0 sent_select 4 PTOCOMA 118</td><td class="izq mono">EOF</td><td class="izq mono">reducir sentencia ::= sent_select PTOCOMA</td></tr>
 <tr><td class="izq mono">10</td><td class="izq mono">0 sentencia 2</td><td class="izq mono">EOF</td><td class="izq mono">reducir lista_sentencias ::= sentencia</td></tr>
-<tr><td class="izq mono">11</td><td class="izq mono">0 lista_sentencias 11</td><td class="izq mono">EOF</td><td class="izq mono">reducir programa ::= lista_sentencias</td></tr>
-<tr><td class="izq mono">12</td><td class="izq mono">0 programa 1</td><td class="izq mono">EOF</td><td class="izq mono">desplazar 96</td></tr>
-<tr><td class="izq mono">13</td><td class="izq mono">0 programa 1 EOF 96</td><td class="izq mono">EOF</td><td class="izq mono">aceptar</td></tr>
+<tr><td class="izq mono">11</td><td class="izq mono">0 lista_sentencias 13</td><td class="izq mono">EOF</td><td class="izq mono">reducir programa ::= lista_sentencias</td></tr>
+<tr><td class="izq mono">12</td><td class="izq mono">0 programa 1</td><td class="izq mono">EOF</td><td class="izq mono">desplazar 129</td></tr>
+<tr><td class="izq mono">13</td><td class="izq mono">0 programa 1 EOF 129</td><td class="izq mono">EOF</td><td class="izq mono">aceptar</td></tr>
 </table>
 
 <h2>5. Integración del scanner y el parser: programa principal</h2>
@@ -516,7 +546,7 @@ Resumen: 2 sentencia(s) analizada(s), 1 correcta(s), 1 incorrecta(s). Errores l�
   léxicos, regulares, se describen con expresiones regulares y se reconocen con el AFD que genera JLex; la estructura de
   las sentencias, independiente del contexto, se describe con una GIC y se reconoce con el autómata de pila LALR(1) que
   genera Cup. A partir de las especificaciones (<code>Sql.lex</code> de 83 líneas y <code>Sql.cup</code> de
-  184) las herramientas generaron 1480 líneas de Java, con tablas de 97 estados. Las restricciones que
+  225) las herramientas generaron 1919 líneas de Java, con tablas de 130 estados. Las restricciones que
   parecen "de contexto", como la igualdad entre la cantidad de columnas y de valores, se pudieron expresar en la GIC
   porque tienen la forma <i>a<sup>n</sup>b<sup>n</sup></i>. La parte que más trabajo llevó fue el tratamiento de
   errores: ubicar cada error en su sentencia, sincronizar después de un error y dar mensajes que indiquen qué se
@@ -689,6 +719,7 @@ terminal String IDENTIFICADOR, ENTERO, CADENA;
 
 non terminal programa, lista_sentencias, sentencia;
 non terminal sent_select, sent_insert, sent_update, sent_delete;
+non terminal sent_generica, elementos_genericos, elemento_generico;
 non terminal proyeccion, lista_columnas, clausula_where;
 non terminal columnas_valores, lista_valores;
 non terminal lista_asignaciones, asignacion;
@@ -719,6 +750,8 @@ sentencia ::= sent_select PTOCOMA:p
                 {: parser.analisis.cerrarSentencia(&quot;UPDATE&quot;, pright); :}
             | sent_delete PTOCOMA:p
                 {: parser.analisis.cerrarSentencia(&quot;DELETE&quot;, pright); :}
+            | sent_generica PTOCOMA:p
+                {: parser.analisis.cerrarSentencia(&quot;SQL&quot;, pright); :}
             | error PTOCOMA:p
                 {: parser.analisis.cerrarSentencia(null, pright); :}
             ;
@@ -767,6 +800,44 @@ asignacion ::= IDENTIFICADOR IGUAL expresion ;
 /* DELETE FROM tabla [WHERE condicion] */
 sent_delete ::= DELETE FROM IDENTIFICADOR clausula_where ;
 
+/* Cualquier otra sentencia SQL se valida léxicamente y se acepta como una
+   sentencia genérica. Las cuatro formas anteriores conservan su validación
+   sintáctica detallada. El primer identificador representa palabras
+   reservadas que no forman parte del subconjunto específico de la cátedra. */
+sent_generica ::= IDENTIFICADOR elementos_genericos ;
+
+elementos_genericos ::= elementos_genericos elemento_generico
+                      |
+                      ;
+
+elemento_generico ::= IDENTIFICADOR
+                    | ENTERO
+                    | CADENA
+                    | SELECT
+                    | FROM
+                    | WHERE
+                    | INSERT
+                    | INTO
+                    | VALUES
+                    | UPDATE
+                    | SET
+                    | DELETE
+                    | AND
+                    | OR
+                    | NOT
+                    | IGUAL
+                    | MENOR
+                    | MAYOR
+                    | MENORIGUAL
+                    | MAYORIGUAL
+                    | MAS
+                    | MENOS
+                    | ASTERISCO
+                    | DIVISION
+                    | COMA
+                    | LPAREN elementos_genericos RPAREN
+                    ;
+
 /* Condiciones: comparaciones combinadas con AND, OR y NOT. */
 condicion ::= condicion OR condicion
             | condicion AND condicion
@@ -806,7 +877,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 
 /**
- * Analizador sintáctico del LMD de SQL (SELECT, INSERT, UPDATE, DELETE).
+ * Analizador sintáctico del LMD de SQL, con validación genérica para otras
+ * sentencias SQL.
  * Uso: java sql.Main archivo.sql
  * El scanner (Lexico, generado por JLex) lee el archivo y le entrega los
  * tokens al parser (Parser, generado por CUP), que informa por cada

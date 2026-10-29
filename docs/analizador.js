@@ -266,7 +266,7 @@
   }
 
   const SENTENCIA = { sent_select: "SELECT", sent_insert: "INSERT", sent_update: "UPDATE",
-                      sent_delete: "DELETE", error: null };
+                      sent_delete: "DELETE", sent_generica: "SQL", error: null };
 
   function nombreSimbolo(s) {
     return s.terminal ? T.terminales[s.sym] : T.noTerminales[s.sym];
